@@ -104,6 +104,13 @@ type AuthorizeTokenGen interface {
 // HandleAuthorizeRequest is the main http.HandlerFunc for handling
 // authorization requests
 func (s *Server) HandleAuthorizeRequest(w *Response, r *http.Request) *AuthorizeRequest {
+
+	if err := jsonSupport(w, r); err != nil {
+		w.SetError(E_INVALID_REQUEST, "")
+		w.InternalError = err
+		return nil
+	}
+
 	r.ParseForm()
 
 	// create the authorization request

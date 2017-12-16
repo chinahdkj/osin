@@ -2,8 +2,10 @@ package osin
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -105,4 +107,30 @@ func getClientAuth(w *Response, r *http.Request, allowQueryParams bool) *BasicAu
 		return nil
 	}
 	return auth
+}
+
+func jsonSupport(w *Response, r *http.Request) error {
+
+	// for POST with JSON data in the body
+	if r.Body != nil && strings.ToLower(r.Header.Get("Content-Type")) == "application/json" {
+
+		var bodyValues map[string]string
+
+		defer r.Body.Close()
+		err := json.NewDecoder(r.Body).Decode(&bodyValues)
+
+		if err != nil {
+			return err
+		}
+
+		if r.Form == nil {
+			r.Form = url.Values{}
+		}
+
+		for k, v := range bodyValues {
+			r.Form.Set(k, v)
+		}
+	}
+
+	return nil
 }

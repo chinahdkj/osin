@@ -125,6 +125,12 @@ func (s *Server) HandleAccessRequest(w *Response, r *http.Request) *AccessReques
 		return nil
 	}
 
+	if err := jsonSupport(w, r); err != nil {
+		w.SetError(E_INVALID_REQUEST, "")
+		w.InternalError = err
+		return nil
+	}
+
 	err := r.ParseForm()
 	if err != nil {
 		w.SetError(E_INVALID_REQUEST, "")
@@ -322,6 +328,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 		w.InternalError = err
 		return nil
 	}
+
 	if ret.AccessData == nil {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
 		return nil
@@ -405,7 +412,7 @@ func (s *Server) handleClientCredentialsRequest(w *Response, r *http.Request) *A
 	ret := &AccessRequest{
 		Type:            CLIENT_CREDENTIALS,
 		Scope:           r.Form.Get("scope"),
-		GenerateRefresh: false,
+		GenerateRefresh: true,
 		Expiration:      s.Config.AccessExpiration,
 		HttpRequest:     r,
 	}
@@ -540,6 +547,7 @@ func getClient(auth *BasicAuth, storage Storage, w *Response) Client {
 		w.InternalError = err
 		return nil
 	}
+
 	if client == nil {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
 		return nil
@@ -550,9 +558,9 @@ func getClient(auth *BasicAuth, storage Storage, w *Response) Client {
 		return nil
 	}
 
-	if client.GetRedirectUri() == "" {
-		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-		return nil
-	}
+	// if client.GetRedirectUri() == "" {
+	// 	w.SetError(E_UNAUTHORIZED_CLIENT, "")
+	// 	return nil
+	// }
 	return client
 }
